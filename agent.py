@@ -96,11 +96,11 @@ class Agent:
 
     def get_action(self, state):
         # Tradeoff between exploration / exploitation
-        self.epsilon = 200 - self.n_games
+        self.epsilon = 80 - self.n_games
         final_move = [0, 0, 0]
 
         # Random move vs predicted move
-        if random.randint(0, 80) < self.epsilon:
+        if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
         else:
             state0 = torch.tensor(state, dtype=torch.float)

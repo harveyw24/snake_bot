@@ -66,6 +66,9 @@ class SnakeGameAI:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+        
+        # Old dist to food
+        old_dist = (self.head.x - self.food.x)**2 + (self.head.y - self.food.y)**2
             
         # 2. Move
         self._move(action) # update the head
@@ -86,6 +89,13 @@ class SnakeGameAI:
             self._place_food()
         else:
             self.snake.pop()
+            
+            # New dist to food
+            new_dist = (self.head.x - self.food.x)**2 + (self.head.y - self.food.y)**2
+            if new_dist < old_dist:
+                reward = 1
+            else:
+                reward = -1
         
         # 5. Update ui and clock
         self._update_ui()
