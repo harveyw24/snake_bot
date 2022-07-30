@@ -15,7 +15,7 @@ class Linear_QNet(nn.Module):
         x = self.linear2(x)
         return x
 
-    def save(self, file_name='model.pth'):
+    def save(self, file_name='linear-model.pth'):
         model_folder_path = './model'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
@@ -23,7 +23,7 @@ class Linear_QNet(nn.Module):
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
 
-    def load(self, file_name='model.pth'):
+    def load(self, file_name='linear-model.pth'):
         model_folder_path = './model'
         file_name = os.path.join(model_folder_path, file_name)
 
@@ -35,6 +35,68 @@ class Linear_QNet(nn.Module):
         
         print ('No existing state dict found. Starting from scratch.')
         return False
+
+class CNN_QNet(nn.Module):
+    def __init__(self, hidden_size, output_size):
+        super().__init__()
+        # Input -> (w=640, h=480, n=3)
+        # Pool  -> (w=32,  h=24,  n=3)
+        self.setup = nn.MaxPool2d(kernel_size=20, stride=20)
+
+        # Input -> (w=32, h=24, n=3)
+        # Conv  -> (w=32, h=24, n=32)
+        # Pool  -> (w=16, h=12, n=32)
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=8, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        # Input -> (w=16, h=12, n=32)
+        # Conv  -> (w=16, h=12, n=64)
+        # Pool  -> (w=8,  h=6,  n=64)
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        # Input   -> 8*6*64
+        # Linear1 -> hidden_size
+        # Linear2 -> output_size
+        self.layer3 = nn.Sequential(
+            nn.Linear(8*6*64, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, output_size)
+        )
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        return x
+
+    def save(self, file_name='cnn-model.pth'):
+        model_folder_path = './model'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+        
+        file_name = os.path.join(model_folder_path, file_name)
+        torch.save(self.state_dict(), file_name)
+
+    def load(self, file_name='cnn-model.pth'):
+        model_folder_path = './model'
+        file_name = os.path.join(model_folder_path, file_name)
+
+        if os.path.isfile(file_name):
+            self.load_state_dict(torch.load(file_name))
+            self.eval()
+            print ('Loading existing state dict.')
+            return True
+        
+        print ('No existing state dict found. Starting from scratch.')
+        return False
+
 
 class QTrainer:
     def __init__(self, model, lr, gamma):
