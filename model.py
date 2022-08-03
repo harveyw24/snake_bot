@@ -41,7 +41,7 @@ class CNN_QNet(nn.Module):
         super().__init__()
         # Input -> (w=640, h=480, n=3)
         # Pool  -> (w=32,  h=24,  n=3)
-        self.setup = nn.MaxPool2d(kernel_size=20, stride=20)
+        self.prepool = nn.MaxPool2d(kernel_size=20, stride=20)
 
         # Input -> (w=32, h=24, n=3)
         # Conv  -> (w=32, h=24, n=32)
@@ -71,8 +71,15 @@ class CNN_QNet(nn.Module):
         )
 
     def forward(self, x):
+        # print(x)
+        # print(x.shape)
+        x = self.prepool(x)
         x = self.layer1(x)
         x = self.layer2(x)
+        if len(x.shape) > 3:
+            x = torch.flatten(x, start_dim=1)
+        else:
+            x = torch.flatten(x)
         x = self.layer3(x)
         return x
 
@@ -107,13 +114,19 @@ class QTrainer:
         self.criterion = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, done):
-        state = torch.tensor(state, dtype=torch.float)
-        next_state = torch.tensor(next_state, dtype=torch.float)
+        # Convert to tensor
+        try:
+            state = torch.tensor(state, dtype=torch.float)
+            next_state = torch.tensor(next_state, dtype=torch.float)
+        except:
+            state = torch.stack(state, dim=0)
+            next_state = torch.stack(next_state, dim=0)
+
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float)
         # (n, x)
 
-        if len(state.shape) == 1:
+        if len(state.shape) == 3:
             state = torch.unsqueeze(state, 0)
             next_state = torch.unsqueeze(next_state, 0)
             action = torch.unsqueeze(action, 0)

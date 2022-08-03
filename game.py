@@ -21,6 +21,8 @@ WHITE = (255, 255, 255)
 RED = (200,0,0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
+GREEN1 = (0, 255, 0)
+GREEN2 = (0, 255, 100)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
@@ -35,6 +37,7 @@ class SnakeGameAI:
         self.display = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
+        self.state = pygame.surfarray.array3d(pygame.display.get_surface())
         self.reset()
         
     def reset(self):
@@ -101,7 +104,10 @@ class SnakeGameAI:
         self._update_ui()
         self.clock.tick(SPEED)
 
-        # 6. Return reward, game over, and score
+        # 6. Retrieve image of game state
+        self.state = pygame.surfarray.array3d(pygame.display.get_surface())
+
+        # 7. Return reward, game over, and score
         return reward, game_over, self.score
     
     def is_collision(self, pt=None):
@@ -119,8 +125,12 @@ class SnakeGameAI:
         
     def _update_ui(self):
         self.display.fill(BLACK)
+
+        # Draw head
+        pygame.draw.rect(self.display, GREEN1, pygame.Rect(self.head.x, self.head.y, BLOCK_SIZE, BLOCK_SIZE))
+        pygame.draw.rect(self.display, GREEN2, pygame.Rect(self.head.x+4, self.head.y+4, 12, 12))
         
-        for pt in self.snake:
+        for pt in self.snake[1:]:
             pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
             pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
             
